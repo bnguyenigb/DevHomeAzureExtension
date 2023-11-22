@@ -32,7 +32,7 @@ public class AuthService : IDevBoxAuthService
 
     public HttpClient GetManagementClient(IDeveloperId? devId)
     {
-        httpArmClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _armTokenService.GetTokenAsync().Result);
+        httpArmClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _armTokenService.GetTokenAsync(devId).Result);
         return httpArmClient;
     }
 }

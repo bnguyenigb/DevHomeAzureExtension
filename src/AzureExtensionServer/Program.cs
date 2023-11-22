@@ -228,7 +228,7 @@ public sealed class Program
             ConfigureServices((context, services) =>
             {
                 // Dev Box
-                services.AddHttpClient();
+                services.AddSingleton<IHttpClientFactory>();
                 services.AddSingleton<IDevBoxManagementService, ManagementService>();
                 services.AddSingleton<IDevBoxAuthService, AuthService>();
                 services.AddSingleton<IArmTokenService, ArmTestTokenService>();
