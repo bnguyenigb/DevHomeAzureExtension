@@ -108,7 +108,7 @@ public class DevBoxInstance : IComputeSystem
             return (string.Empty, string.Empty);
         }
 
-        var boxResponse = httpClient.Send(boxRequest);
+        var boxResponse = await httpClient.SendAsync(boxRequest);
         var content = await boxResponse.Content.ReadAsStringAsync();
         JsonElement json = JsonDocument.Parse(content).RootElement;
         var remoteUri = json.GetProperty("rdpConnectionUrl").ToString();

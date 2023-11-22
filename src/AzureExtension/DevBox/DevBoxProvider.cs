@@ -58,7 +58,7 @@ public class DevBoxProvider : IComputeSystemProvider, IDisposable
                     var devCenterUri = dataItem.GetProperty("properties").GetProperty("devCenterUri").ToString();
 
                     // Todo: Remove this test
-                    if (project != "EngProdADEPT")
+                    if (project != "DevBoxUnitTestProject" && project != "EngProdADEPT")
                     {
                         continue;
                     }
