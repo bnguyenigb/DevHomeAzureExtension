@@ -41,6 +41,6 @@ public partial class DevBoxTests
         var systems = instance.GetComputeSystemsAsync(null).Result;
 
         // Assert
-        Assert.IsTrue(systems.Any());
+        Assert.IsTrue(systems?.Any());
     }
 }
