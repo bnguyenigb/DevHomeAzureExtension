@@ -21,8 +21,8 @@ public class ManagementService : IDevBoxManagementService
         _authService = authService;
 
     private static readonly string Query =
-    "{\"query\": \"Resources | where type in~ ('microsoft.devcenter/projects') | where properties['provisioningState'] =~ 'Succeeded' | project id, location, tenantId, name, properties, type\"," +
-    " \"options\":{\"allowPartialScopes\":true}}";
+        "{\"query\": \"Resources | where type in~ ('microsoft.devcenter/projects') | where properties['provisioningState'] =~ 'Succeeded' | project id, location, tenantId, name, properties, type\"," +
+        " \"options\":{\"allowPartialScopes\":true}}";
 
     public IDeveloperId? DevId
     {
