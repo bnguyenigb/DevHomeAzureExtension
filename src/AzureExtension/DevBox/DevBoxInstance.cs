@@ -124,11 +124,12 @@ public class DevBoxInstance : IComputeSystem
         private set;
     }
 
-    public IAsyncOperation<ComputeSystemOperationResult> Start(string options)
+    private IAsyncOperation<ComputeSystemOperationResult> PerformRESTOperation(string operation)
     {
+        // Todo: Add exception handling
         return Task.Run(async () =>
         {
-            var api = BoxURI + ":start?api-version=2023-04-01";
+            var api = $"{BoxURI}:{operation}?api-version=2023-04-01";
             Log.Logger()?.ReportInfo($"Starting {Name} with {api}");
 
             var httpClient = _authService.GetDataPlaneClient(DevId);
@@ -164,30 +165,14 @@ public class DevBoxInstance : IComputeSystem
         }).AsAsyncOperation();
     }
 
+    public IAsyncOperation<ComputeSystemOperationResult> Start(string options)
+    {
+        return PerformRESTOperation("start");
+    }
+
     public IAsyncOperation<ComputeSystemOperationResult> ShutDown(string options)
     {
-        return Task.Run(async () =>
-        {
-            var api = BoxURI + ":stop?api-version=2023-04-01";
-            Log.Logger()?.ReportInfo($"Shutting down {Name} with {api}");
-
-            var httpClient = _authService.GetDataPlaneClient(DevId);
-            if (httpClient == null)
-            {
-                return new ComputeSystemOperationResult("Fail");
-            }
-
-            var response = await httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Post, api));
-            if (response.IsSuccessStatusCode)
-            {
-                var res = new ComputeSystemOperationResult("Success");
-                return res;
-            }
-            else
-            {
-                return new ComputeSystemOperationResult("Fail");
-            }
-        }).AsAsyncOperation();
+        return PerformRESTOperation("stop");
     }
 
     public IAsyncOperation<ComputeSystemOperationResult> Connect(string properties)
