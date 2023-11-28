@@ -29,7 +29,7 @@ public class ManagementService : IDevBoxManagementService
         get; set;
     }
 
-    public async Task<JsonElement> GetAllProjectsAsJSONAsync()
+    public async Task<JsonElement> GetAllProjectsAsJsonAsync()
     {
         JsonElement result = default;
         var httpManageClient = _authService.GetManagementClient(DevId);
@@ -59,7 +59,7 @@ public class ManagementService : IDevBoxManagementService
         return result;
     }
 
-    public async Task<JsonElement> GetBoxesAsJSONAsync(string devCenterUri, string project)
+    public async Task<JsonElement> GetBoxesAsJsonAsync(string devCenterUri, string project)
     {
         JsonElement result = default;
 

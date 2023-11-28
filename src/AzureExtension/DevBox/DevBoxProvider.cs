@@ -26,9 +26,9 @@ public class DevBoxProvider : IComputeSystemProvider, IDisposable
         set => throw new NotImplementedException();
     }
 
-    public string DisplayName => "DevBox Provider";
+    public string DisplayName => "Microsoft DevBox Provider";
 
-    public string Id => "182AF84F-D5E1-469C-9742-536EFEA94630";
+    public string Id => "Microsoft.DevBox";
 
     public string Properties => throw new NotImplementedException();
 
@@ -47,7 +47,7 @@ public class DevBoxProvider : IComputeSystemProvider, IDisposable
         if (mgmtSvc != null)
         {
             mgmtSvc.DevId = developerId;
-            var projectJSONs = await mgmtSvc.GetAllProjectsAsJSONAsync();
+            var projectJSONs = await mgmtSvc.GetAllProjectsAsJsonAsync();
 
             if (IsValid(projectJSONs))
             {
@@ -63,7 +63,7 @@ public class DevBoxProvider : IComputeSystemProvider, IDisposable
                         continue;
                     }
 
-                    var boxes = await mgmtSvc.GetBoxesAsJSONAsync(devCenterUri, project);
+                    var boxes = await mgmtSvc.GetBoxesAsJsonAsync(devCenterUri, project);
                     if (IsValid(boxes))
                     {
                         Log.Logger()?.ReportInfo($"Found {boxes.EnumerateArray().Count()} boxes for project {project}");
@@ -86,6 +86,7 @@ public class DevBoxProvider : IComputeSystemProvider, IDisposable
         }
         else
         {
+            // ToDo: Remove throw and add to return object
             Log.Logger()?.ReportError($"Error getting systems: Rest Service not configured");
             throw new ArgumentException($"Rest Service needs to be configured.");
         }
