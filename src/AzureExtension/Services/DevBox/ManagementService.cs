@@ -21,8 +21,8 @@ public class ManagementService : IDevBoxManagementService
         _authService = authService;
 
     private static readonly string Query =
-    "{\"query\": \"Resources | where type in~ ('microsoft.devcenter/projects') | where properties['provisioningState'] =~ 'Succeeded' | project id, location, tenantId, name, properties, type\"," +
-    " \"options\":{\"allowPartialScopes\":true}}";
+        "{\"query\": \"Resources | where type in~ ('microsoft.devcenter/projects') | where properties['provisioningState'] =~ 'Succeeded' | project id, location, tenantId, name, properties, type\"," +
+        " \"options\":{\"allowPartialScopes\":true}}";
 
     public IDeveloperId? DevId
     {
@@ -62,8 +62,6 @@ public class ManagementService : IDevBoxManagementService
     public async Task<JsonElement> GetBoxesAsJsonAsync(string devCenterUri, string project)
     {
         JsonElement result = default;
-
-        // Todo: Make the client a singleton
         var httpDataClient = _authService.GetDataPlaneClient(DevId);
         if (httpDataClient != null)
         {
@@ -85,8 +83,7 @@ public class ManagementService : IDevBoxManagementService
         }
         else
         {
-            // Todo: Uncomment after testing
-            // Log.Logger()?.ReportError($"Error getting boxes: httpDataClient is null");
+            Log.Logger()?.ReportError($"Error getting boxes: httpDataClient is null");
         }
 
         return result;

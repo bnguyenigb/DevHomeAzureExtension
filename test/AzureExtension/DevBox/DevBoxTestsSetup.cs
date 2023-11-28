@@ -81,8 +81,8 @@ public partial class DevBoxTests : IDisposable
                 ],
             ""facets"": [],
             ""resultTruncated"": ""false"",
-            ""rdpConnectionUrl"": ""sampleURL"",
-            ""webUrl"": ""sampleURL""
+            ""rdpConnectionUrl"": ""https://sample.uri.com"",
+            ""webUrl"": ""https://sample.uri.com""
         }";
 
     private HttpClient mockHttpClient = new();

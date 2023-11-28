@@ -32,6 +32,7 @@ public class DevBoxProvider : IComputeSystemProvider, IDisposable
 
     public string Properties => throw new NotImplementedException();
 
+    // No create operation supported
     public ComputeSystemProviderOperation SupportedOperations => 0x0;
 
     private bool IsValid(JsonElement jsonElement)
@@ -39,7 +40,7 @@ public class DevBoxProvider : IComputeSystemProvider, IDisposable
         return jsonElement.ValueKind != JsonValueKind.Undefined;
     }
 
-    public async Task<IEnumerable<IComputeSystem>> GetComputeSystemsAsync(IDeveloperId? developerId)
+    public async Task<IEnumerable<IComputeSystem>?> GetComputeSystemsAsync(IDeveloperId? developerId)
     {
         var computeSystems = new List<IComputeSystem>();
 
@@ -86,9 +87,7 @@ public class DevBoxProvider : IComputeSystemProvider, IDisposable
         }
         else
         {
-            // ToDo: Remove throw and add to return object
-            Log.Logger()?.ReportError($"Error getting systems: Rest Service not configured");
-            throw new ArgumentException($"Rest Service needs to be configured.");
+            return null;
         }
     }
 
@@ -99,6 +98,13 @@ public class DevBoxProvider : IComputeSystemProvider, IDisposable
         return Task.Run(async () =>
         {
             var computeSystems = await GetComputeSystemsAsync(developerId);
+            if (computeSystems is null)
+            {
+                var ex = new ArgumentException($"Error getting systems: Rest Service not configured");
+                Log.Logger()?.ReportError(ex.Message);
+                return new ComputeSystemsResult(ex, string.Empty);
+            }
+
             return new ComputeSystemsResult(computeSystems);
         }).AsAsyncOperation();
     }
