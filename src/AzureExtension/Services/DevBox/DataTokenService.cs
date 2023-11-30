@@ -15,12 +15,20 @@ public class DataTokenService : IDataTokenService
     {
         if (devId == null)
         {
-            Log.Logger()?.ReportError($"GetTokenAsync: No dev id provided");
+            Log.Logger()?.ReportError($"DataTokenService::GetTokenAsync: No dev id provided");
             return string.Empty;
         }
 
         string[] scopes = { "https://devcenter.azure.com/access_as_user" };
-        var result = await AuthHelper.ObtainTokenForLoggedInDeveloperAccount(scopes, devId.LoginId);
-        return result?.AccessToken ?? string.Empty;
+        try
+        {
+            var result = await AuthHelper.ObtainTokenForLoggedInDeveloperAccount(scopes, devId.LoginId);
+            return result?.AccessToken ?? string.Empty;
+        }
+        catch (Exception e)
+        {
+            Log.Logger()?.ReportError($"DataTokenService::GetTokenAsync: {e.Message}");
+            return string.Empty;
+        }
     }
 }
