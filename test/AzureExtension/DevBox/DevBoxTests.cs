@@ -32,13 +32,14 @@ public partial class DevBoxTests
                 services.AddSingleton<IDevBoxAuthService, AuthService>();
                 services.AddSingleton<IArmTokenService, ArmTestTokenService>();
                 services.AddSingleton<IDataTokenService, DataTestTokenService>();
+                services.AddSingleton<DevBoxProvider>();
                 services.AddTransient<DevBoxInstance>();
             }).
             Build();
 
         // Act
-        var instance = new DevBoxProvider(host);
-        var systems = instance.GetComputeSystemsAsync(null).Result;
+        var instance = host.Services.GetService<DevBoxProvider>();
+        var systems = instance?.GetComputeSystemsAsync(null).Result;
 
         // Assert
         Assert.IsTrue(systems?.Any());
