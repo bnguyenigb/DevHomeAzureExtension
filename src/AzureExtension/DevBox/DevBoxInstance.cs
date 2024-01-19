@@ -18,6 +18,8 @@ public class DevBoxInstance : IComputeSystem
 {
     private readonly IDevBoxAuthService _authService;
 
+    public event TypedEventHandler<IComputeSystem, ComputeSystemState>? StateChanged;
+
     public IDeveloperId? DevId
     {
         get; private set;
@@ -136,6 +138,12 @@ public class DevBoxInstance : IComputeSystem
         private set;
     }
 
+    public string AlternativeDisplayName => throw new NotImplementedException();
+
+    public IDeveloperId AssociatedDeveloperId => throw new NotImplementedException();
+
+    public string AssociatedProviderId => throw new NotImplementedException();
+
     /// <summary>
     /// Common method to perform REST operations on the DevBox.
     /// This method is used by Start, ShutDown, Restart, and Delete.
@@ -156,45 +164,47 @@ public class DevBoxInstance : IComputeSystem
                 if (httpClient == null)
                 {
                     var ex = new ArgumentException("PerformRESTOperation: HTTPClient null");
-                    return new ComputeSystemOperationResult(ex, string.Empty, string.Empty);
+                    return new ComputeSystemOperationResult(ex, string.Empty);
                 }
 
                 var response = await httpClient.SendAsync(new HttpRequestMessage(method, api));
                 if (response.IsSuccessStatusCode)
                 {
-                    var res = new ComputeSystemOperationResult("Success");
+                    var res = new ComputeSystemOperationResult();
                     return res;
                 }
                 else
                 {
                     var ex = new HttpRequestException($"PerformRESTOperation: {operation} failed on {Name}: {response.StatusCode} {response.ReasonPhrase}");
-                    return new ComputeSystemOperationResult(ex, string.Empty, string.Empty);
+                    return new ComputeSystemOperationResult(ex, string.Empty);
                 }
             }
             catch (Exception ex)
             {
                 Log.Logger()?.ReportError($"PerformRESTOperation: Exception: {operation} failed on {Name}: {ex.ToString}");
-                return new ComputeSystemOperationResult(ex, string.Empty, string.Empty);
+                return new ComputeSystemOperationResult(ex, string.Empty);
             }
         }).AsAsyncOperation();
     }
 
-    public IAsyncOperation<ComputeSystemOperationResult> Start(string options)
+    public IAsyncOperation<ComputeSystemOperationResult> StartAsync(string options)
     {
+        // ToDo: Change this event
+        StateChanged?.Invoke(this, ComputeSystemState.Starting);
         return PerformRESTOperation("start", HttpMethod.Post);
     }
 
-    public IAsyncOperation<ComputeSystemOperationResult> ShutDown(string options)
+    public IAsyncOperation<ComputeSystemOperationResult> ShutDownAsync(string options)
     {
         return PerformRESTOperation("stop", HttpMethod.Post);
     }
 
-    public IAsyncOperation<ComputeSystemOperationResult> Restart(string options)
+    public IAsyncOperation<ComputeSystemOperationResult> RestartAsync(string options)
     {
         return PerformRESTOperation("restart", HttpMethod.Post);
     }
 
-    public IAsyncOperation<ComputeSystemOperationResult> Delete(string options)
+    public IAsyncOperation<ComputeSystemOperationResult> DeleteAsync(string options)
     {
         return PerformRESTOperation("delete", HttpMethod.Delete);
     }
@@ -202,8 +212,8 @@ public class DevBoxInstance : IComputeSystem
     /// <summary>
     /// Launches the DevBox in a browser.
     /// </summary>
-    /// <param name="properties">Unused parameter</param>
-    public IAsyncOperation<ComputeSystemOperationResult> Connect(string properties)
+    /// <param name="options">Unused parameter</param>
+    public IAsyncOperation<ComputeSystemOperationResult> ConnectAsync(string options)
     {
         return Task.Run(() =>
         {
@@ -213,17 +223,17 @@ public class DevBoxInstance : IComputeSystem
                 psi.UseShellExecute = true;
                 psi.FileName = WebURI?.ToString();
                 Process.Start(psi);
-                return new ComputeSystemOperationResult("Success");
+                return new ComputeSystemOperationResult();
             }
             catch (Exception ex)
             {
                 Log.Logger()?.ReportError($"Error connecting to {Name}: {ex.ToString}");
-                return new ComputeSystemOperationResult(ex, string.Empty, string.Empty);
+                return new ComputeSystemOperationResult(ex, string.Empty);
             }
         }).AsAsyncOperation();
     }
 
-    public IAsyncOperation<ComputeSystemStateResult> GetState(string options)
+    public IAsyncOperation<ComputeSystemStateResult> GetStateAsync(string options)
     {
         return Task.Run(() =>
         {
@@ -252,23 +262,27 @@ public class DevBoxInstance : IComputeSystem
     }
 
     // Unsupported operations
-    public IAsyncOperation<ComputeSystemOperationResult> ApplyConfiguration(string configuration) => throw new NotImplementedException();
+    public IAsyncOperation<ComputeSystemOperationResult> ApplyConfigurationAsync(string configuration) => throw new NotImplementedException();
 
-    public IAsyncOperation<ComputeSystemOperationResult> ApplySnapshot(string options) => throw new NotImplementedException();
+    public IAsyncOperation<ComputeSystemOperationResult> RevertSnapshotAsync(string options) => throw new NotImplementedException();
 
-    public IAsyncOperation<ComputeSystemOperationResult> CreateSnapshot(string options) => throw new NotImplementedException();
+    public IAsyncOperation<ComputeSystemOperationResult> CreateSnapshotAsync(string options) => throw new NotImplementedException();
 
-    public IAsyncOperation<ComputeSystemOperationResult> DeleteSnapshot(string options) => throw new NotImplementedException();
+    public IAsyncOperation<ComputeSystemOperationResult> DeleteSnapshotAsync(string options) => throw new NotImplementedException();
 
-    public IAsyncOperation<ComputeSystemOperationResult> GetProperties(string options) => throw new NotImplementedException();
+    public IAsyncOperation<ComputeSystemOperationResult> PauseAsync(string options) => throw new NotImplementedException();
 
-    public IAsyncOperation<ComputeSystemOperationResult> ModifyProperties(string properties) => throw new NotImplementedException();
+    public IAsyncOperation<ComputeSystemOperationResult> ResumeAsync(string options) => throw new NotImplementedException();
 
-    public IAsyncOperation<ComputeSystemOperationResult> Pause(string options) => throw new NotImplementedException();
+    public IAsyncOperation<ComputeSystemOperationResult> SaveAsync(string options) => throw new NotImplementedException();
 
-    public IAsyncOperation<ComputeSystemOperationResult> Resume(string options) => throw new NotImplementedException();
+    public IAsyncOperation<ComputeSystemOperationResult> TerminateAsync(string options) => throw new NotImplementedException();
 
-    public IAsyncOperation<ComputeSystemOperationResult> Save(string options) => throw new NotImplementedException();
+    public IAsyncOperation<ComputeSystemOperationResult> ModifyPropertiesAsync(string options) => throw new NotImplementedException();
 
-    public IAsyncOperation<ComputeSystemOperationResult> Terminate(string options) => throw new NotImplementedException();
+    public IAsyncOperation<ComputeSystemThumbnailResult> GetComputeSystemThumbnailAsync(string options) => throw new NotImplementedException();
+
+    public IAsyncOperation<IEnumerable<ComputeSystemProperty>> GetComputeSystemPropertiesAsync(string options) => throw new NotImplementedException();
+
+    IAsyncOperationWithProgress<ComputeSystemOperationResult, ComputeSystemOperationData> IComputeSystem.ApplyConfigurationAsync(string configuration) => throw new NotImplementedException();
 }
