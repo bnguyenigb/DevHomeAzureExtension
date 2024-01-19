@@ -22,20 +22,13 @@ public class DevBoxProvider : IComputeSystemProvider
         _devBoxManagementService = mgmtSvc;
     }
 
-    string IComputeSystemProvider.DefaultComputeSystemProperties
-    {
-        get => throw new NotImplementedException();
-        set => throw new NotImplementedException();
-    }
-
     public string DisplayName => "Microsoft DevBox Provider";
 
     public string Id => "Microsoft.DevBox";
 
     public string Properties => throw new NotImplementedException();
 
-    // No create operation supported
-    public ComputeSystemProviderOperation SupportedOperations => 0x0;
+    ComputeSystemProviderOperations IComputeSystemProvider.SupportedOperations => throw new NotImplementedException();
 
     private bool IsValid(JsonElement jsonElement)
     {
@@ -107,4 +100,10 @@ public class DevBoxProvider : IComputeSystemProvider
             return new ComputeSystemsResult(computeSystems);
         }).AsAsyncOperation();
     }
+
+    public IAsyncOperation<ComputeSystemAdaptiveCardResult> CreateAdaptiveCardSession(IDeveloperId developerId, ComputeSystemAdaptiveCardKind sessionKind) => throw new NotImplementedException();
+
+    public IAsyncOperation<ComputeSystemAdaptiveCardResult> CreateAdaptiveCardSession(IComputeSystem computeSystem, ComputeSystemAdaptiveCardKind sessionKind) => throw new NotImplementedException();
+
+    public IAsyncOperationWithProgress<CreateComputeSystemResult, ComputeSystemOperationData> CreateComputeSystemAsync(IDeveloperId developerId, string options) => throw new NotImplementedException();
 }
