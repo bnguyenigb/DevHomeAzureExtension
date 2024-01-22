@@ -2,10 +2,13 @@
 // Licensed under the MIT license.
 
 using System.Diagnostics;
+using System.Runtime.InteropServices.WindowsRuntime;
 using System.Text.Json;
 using AzureExtension.Contracts;
 using Microsoft.Windows.DevHome.SDK;
 using Windows.Foundation;
+using Windows.Storage;
+using Windows.Storage.Streams;
 
 namespace AzureExtension.DevBox;
 
@@ -280,7 +283,23 @@ public class DevBoxInstance : IComputeSystem
 
     public IAsyncOperation<ComputeSystemOperationResult> ModifyPropertiesAsync(string options) => throw new NotImplementedException();
 
-    public IAsyncOperation<ComputeSystemThumbnailResult> GetComputeSystemThumbnailAsync(string options) => throw new NotImplementedException();
+    public IAsyncOperation<ComputeSystemThumbnailResult> GetComputeSystemThumbnailAsync(string options)
+    {
+        return Task.Run(async () =>
+        {
+            StateChanged?.Invoke(this, ComputeSystemState.Running);
+
+            var uri = new Uri(Constants.ThumbnailURI);
+            var storageFile = await StorageFile.GetFileFromApplicationUriAsync(uri);
+            var randomAccessStream = await storageFile.OpenReadAsync();
+
+            // Convert the stream to a byte array
+            byte[] bytes = new byte[randomAccessStream.Size];
+            await randomAccessStream.ReadAsync(bytes.AsBuffer(), (uint)randomAccessStream.Size, InputStreamOptions.None);
+
+            return new ComputeSystemThumbnailResult(bytes);
+        }).AsAsyncOperation();
+    }
 
     public IAsyncOperation<IEnumerable<ComputeSystemProperty>> GetComputeSystemPropertiesAsync(string options) => throw new NotImplementedException();
 
