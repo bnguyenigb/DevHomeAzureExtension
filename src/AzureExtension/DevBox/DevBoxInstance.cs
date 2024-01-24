@@ -2,9 +2,11 @@
 // Licensed under the MIT license.
 
 using System.Diagnostics;
+using System.Globalization;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Text.Json;
 using AzureExtension.Contracts;
+using Microsoft.Identity.Client.Extensions.Msal;
 using Microsoft.Windows.DevHome.SDK;
 using Windows.Foundation;
 using Windows.Storage;
@@ -58,6 +60,11 @@ public class DevBoxInstance : IComputeSystem
         get; private set;
     }
 
+    public string? DiskSize
+    {
+        get; private set;
+    }
+
     public Uri? WebURI
     {
         get; private set;
@@ -78,9 +85,46 @@ public class DevBoxInstance : IComputeSystem
         get; private set;
     }
 
+    public IEnumerable<ComputeSystemProperty> Properties
+    {
+        get; set;
+    }
+
     public DevBoxInstance(IDevBoxAuthService devBoxAuthService)
     {
         _authService = devBoxAuthService;
+        Properties = new List<ComputeSystemProperty>();
+    }
+
+    private void ProcessProperties()
+    {
+        if (!Properties.Any())
+        {
+            var properties = new List<ComputeSystemProperty>();
+            if (CPU is not null)
+            {
+                var cpu = new ComputeSystemProperty(int.Parse(CPU, CultureInfo.CurrentCulture), ComputeSystemPropertyKind.CpuCount);
+                properties.Add(cpu);
+            }
+
+            if (Memory is not null)
+            {
+                int memoryInGB = int.Parse(Memory, CultureInfo.CurrentCulture);
+                long memoryInBytes = memoryInGB * 1073741824L;
+                var memory = new ComputeSystemProperty(memoryInBytes, ComputeSystemPropertyKind.AssignedMemorySizeInBytes);
+                properties.Add(memory);
+            }
+
+            if (DiskSize is not null)
+            {
+                int diskSizeInGB = int.Parse(DiskSize, CultureInfo.CurrentCulture);
+                long diskSizeInBytes = diskSizeInGB * 1073741824L;
+                var diskSize = new ComputeSystemProperty(diskSizeInBytes, ComputeSystemPropertyKind.StorageSizeInBytes);
+                properties.Add(diskSize);
+            }
+
+            Properties = properties;
+        }
     }
 
     /// <summary>
@@ -100,6 +144,7 @@ public class DevBoxInstance : IComputeSystem
             State = item.GetProperty("powerState").ToString();
             CPU = item.GetProperty("hardwareProfile").GetProperty("vCPUs").ToString();
             Memory = item.GetProperty("hardwareProfile").GetProperty("memoryGB").ToString();
+            DiskSize = item.GetProperty("storageProfile").GetProperty("osDisk").GetProperty("diskSizeGB").ToString();
             OS = item.GetProperty("imageReference").GetProperty("operatingSystem").ToString();
             ProjectName = project;
             DevId = devId;
@@ -133,7 +178,7 @@ public class DevBoxInstance : IComputeSystem
     }
 
     public ComputeSystemOperations SupportedOperations =>
-        ComputeSystemOperations.Start | ComputeSystemOperations.ShutDown | ComputeSystemOperations.Delete;
+        ComputeSystemOperations.Start | ComputeSystemOperations.ShutDown | ComputeSystemOperations.Delete | ComputeSystemOperations.Restart;
 
     public bool IsValid
     {
@@ -141,7 +186,7 @@ public class DevBoxInstance : IComputeSystem
         private set;
     }
 
-    public string AlternativeDisplayName => throw new NotImplementedException();
+    public string AlternativeDisplayName => new string("Project : " + ProjectName ?? "Unknown");
 
     public IDeveloperId AssociatedDeveloperId => throw new NotImplementedException();
 
@@ -199,16 +244,19 @@ public class DevBoxInstance : IComputeSystem
 
     public IAsyncOperation<ComputeSystemOperationResult> ShutDownAsync(string options)
     {
+        StateChanged?.Invoke(this, ComputeSystemState.Starting);
         return PerformRESTOperation("stop", HttpMethod.Post);
     }
 
     public IAsyncOperation<ComputeSystemOperationResult> RestartAsync(string options)
     {
+        StateChanged?.Invoke(this, ComputeSystemState.Restarting);
         return PerformRESTOperation("restart", HttpMethod.Post);
     }
 
     public IAsyncOperation<ComputeSystemOperationResult> DeleteAsync(string options)
     {
+        StateChanged?.Invoke(this, ComputeSystemState.Deleting);
         return PerformRESTOperation("delete", HttpMethod.Delete);
     }
 
@@ -264,25 +312,6 @@ public class DevBoxInstance : IComputeSystem
         }).AsAsyncOperation();
     }
 
-    // Unsupported operations
-    public IAsyncOperation<ComputeSystemOperationResult> ApplyConfigurationAsync(string configuration) => throw new NotImplementedException();
-
-    public IAsyncOperation<ComputeSystemOperationResult> RevertSnapshotAsync(string options) => throw new NotImplementedException();
-
-    public IAsyncOperation<ComputeSystemOperationResult> CreateSnapshotAsync(string options) => throw new NotImplementedException();
-
-    public IAsyncOperation<ComputeSystemOperationResult> DeleteSnapshotAsync(string options) => throw new NotImplementedException();
-
-    public IAsyncOperation<ComputeSystemOperationResult> PauseAsync(string options) => throw new NotImplementedException();
-
-    public IAsyncOperation<ComputeSystemOperationResult> ResumeAsync(string options) => throw new NotImplementedException();
-
-    public IAsyncOperation<ComputeSystemOperationResult> SaveAsync(string options) => throw new NotImplementedException();
-
-    public IAsyncOperation<ComputeSystemOperationResult> TerminateAsync(string options) => throw new NotImplementedException();
-
-    public IAsyncOperation<ComputeSystemOperationResult> ModifyPropertiesAsync(string options) => throw new NotImplementedException();
-
     public IAsyncOperation<ComputeSystemThumbnailResult> GetComputeSystemThumbnailAsync(string options)
     {
         return Task.Run(async () =>
@@ -301,7 +330,33 @@ public class DevBoxInstance : IComputeSystem
         }).AsAsyncOperation();
     }
 
-    public IAsyncOperation<IEnumerable<ComputeSystemProperty>> GetComputeSystemPropertiesAsync(string options) => throw new NotImplementedException();
+    public IAsyncOperation<IEnumerable<ComputeSystemProperty>> GetComputeSystemPropertiesAsync(string options)
+    {
+        return Task.Run(() =>
+        {
+            ProcessProperties();
+            return Properties;
+        }).AsAsyncOperation();
+    }
+
+    // Unsupported operations
+    public IAsyncOperation<ComputeSystemOperationResult> ApplyConfigurationAsync(string configuration) => throw new NotImplementedException();
+
+    public IAsyncOperation<ComputeSystemOperationResult> RevertSnapshotAsync(string options) => throw new NotImplementedException();
+
+    public IAsyncOperation<ComputeSystemOperationResult> CreateSnapshotAsync(string options) => throw new NotImplementedException();
+
+    public IAsyncOperation<ComputeSystemOperationResult> DeleteSnapshotAsync(string options) => throw new NotImplementedException();
+
+    public IAsyncOperation<ComputeSystemOperationResult> PauseAsync(string options) => throw new NotImplementedException();
+
+    public IAsyncOperation<ComputeSystemOperationResult> ResumeAsync(string options) => throw new NotImplementedException();
+
+    public IAsyncOperation<ComputeSystemOperationResult> SaveAsync(string options) => throw new NotImplementedException();
+
+    public IAsyncOperation<ComputeSystemOperationResult> TerminateAsync(string options) => throw new NotImplementedException();
+
+    public IAsyncOperation<ComputeSystemOperationResult> ModifyPropertiesAsync(string options) => throw new NotImplementedException();
 
     IAsyncOperationWithProgress<ComputeSystemOperationResult, ComputeSystemOperationData> IComputeSystem.ApplyConfigurationAsync(string configuration) => throw new NotImplementedException();
 }
