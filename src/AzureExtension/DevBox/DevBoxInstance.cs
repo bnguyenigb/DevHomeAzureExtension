@@ -205,7 +205,8 @@ public class DevBoxInstance : IComputeSystem
         {
             try
             {
-                var api = $"{BoxURI}:{operation}?{Constants.APIVersion}";
+                var api = operation.Length > 0 ?
+                    $"{BoxURI}:{operation}?{Constants.APIVersion}" : $"{BoxURI}?{Constants.APIVersion}";
                 Log.Logger()?.ReportInfo($"Starting {Name} with {api}");
 
                 var httpClient = _authService.GetDataPlaneClient(DevId);
@@ -244,7 +245,7 @@ public class DevBoxInstance : IComputeSystem
 
     public IAsyncOperation<ComputeSystemOperationResult> ShutDownAsync(string options)
     {
-        StateChanged?.Invoke(this, ComputeSystemState.Starting);
+        StateChanged?.Invoke(this, ComputeSystemState.Stopping);
         return PerformRESTOperation("stop", HttpMethod.Post);
     }
 
@@ -257,7 +258,7 @@ public class DevBoxInstance : IComputeSystem
     public IAsyncOperation<ComputeSystemOperationResult> DeleteAsync(string options)
     {
         StateChanged?.Invoke(this, ComputeSystemState.Deleting);
-        return PerformRESTOperation("delete", HttpMethod.Delete);
+        return PerformRESTOperation(string.Empty, HttpMethod.Delete);
     }
 
     /// <summary>
@@ -282,6 +283,11 @@ public class DevBoxInstance : IComputeSystem
                 return new ComputeSystemOperationResult(ex, string.Empty);
             }
         }).AsAsyncOperation();
+    }
+
+    public IAsyncOperation<ComputeSystemOperationResult> TerminateAsync(string options)
+    {
+        return ShutDownAsync(options);
     }
 
     public IAsyncOperation<ComputeSystemStateResult> GetStateAsync(string options)
@@ -353,8 +359,6 @@ public class DevBoxInstance : IComputeSystem
     public IAsyncOperation<ComputeSystemOperationResult> ResumeAsync(string options) => throw new NotImplementedException();
 
     public IAsyncOperation<ComputeSystemOperationResult> SaveAsync(string options) => throw new NotImplementedException();
-
-    public IAsyncOperation<ComputeSystemOperationResult> TerminateAsync(string options) => throw new NotImplementedException();
 
     public IAsyncOperation<ComputeSystemOperationResult> ModifyPropertiesAsync(string options) => throw new NotImplementedException();
 
