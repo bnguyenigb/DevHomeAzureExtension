@@ -25,7 +25,7 @@ public class DevBoxProvider : IComputeSystemProvider
         _devBoxManagementService = mgmtSvc;
     }
 
-    public string DisplayName => "Microsoft DevBox Provider";
+    public string DisplayName => "Microsoft DevBox";
 
     public string Id => "Microsoft.DevBox";
 
