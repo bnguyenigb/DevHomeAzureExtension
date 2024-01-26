@@ -53,13 +53,6 @@ public class DevBoxProvider : IComputeSystemProvider
     {
         var project = data.GetProperty("name").ToString();
         var devCenterUri = data.GetProperty("properties").GetProperty("devCenterUri").ToString();
-
-        // Todo: Remove this test in Prod
-        if (project != "DevBoxUnitTestProject" && project != "EngProdADEPT")
-        {
-            return;
-        }
-
         var devBoxes = await _devBoxManagementService.GetDevBoxesAsJsonAsync(devCenterUri, project);
         if (IsValid(devBoxes))
         {
