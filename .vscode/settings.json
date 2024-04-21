@@ -1,0 +1,23 @@
+{
+    "cmake.options.advanced": {
+        "buildPreset": {},
+        "build": {
+            "statusBarVisibility": "inherit",
+            "inheritDefault": "visible"
+        },
+        "launch": {
+            "statusBarVisibility": "inherit",
+            "inheritDefault": "visible"
+        },
+        "debug": {
+            "statusBarVisibility": "inherit",
+            "inheritDefault": "visible"
+        }
+    }
+$ git config --list
+user.name=Nguyen Bich
+user.email=bnguyen01@lear.com
+color.status=auto
+color.branch=auto
+color.interactive=auto
+color.diff=auto
